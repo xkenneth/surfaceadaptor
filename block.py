@@ -10,33 +10,14 @@ except Exception, e:
     print e
     raise Exception("There was an error converting the block position!")
 
-import datetime
+import xmlrpclib
+from config import xmlrpc_server
 
-slips = 0
-if sys.argv[1] == 'in':
-    slips = 1
+server = xmlrpclib.ServerProxy(xmlrpc_server)
 
-#django setup code
-from django.core.management import setup_environ
-
-from tdsurface import settings
-
-setup_environ(settings)
-
-#setting up the slip model
-
-from tdsurface.depth.models import BlockPosition, Settings
-
-t = Settings()
-#get the latest run
+server.addSlipsStatus(str(pos))
 
 
-kwargs = {'run':t.get_active_run(),
-          'time_stamp':datetime.datetime.now(),
-          'position':str(pos),
-          'position_units':'ft'}
 
 
-t = BlockPosition(**kwargs)
 
-t.save()
