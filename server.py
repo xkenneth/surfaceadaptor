@@ -88,8 +88,11 @@ class XRServer:
         return 'OK'
         
 
+from config import xmlrpc_server_address
+print "Attempting to bind server to: %s" % xmlrpc_server_address
+
 server_object = XRServer()
-server = SimpleXMLRPCServer.SimpleXMLRPCServer(("localhost", 8888))
+server = SimpleXMLRPCServer.SimpleXMLRPCServer((xmlrpc_server_address, 8888))
 server.register_instance(server_object)
 
 #Go into the main listener loop
