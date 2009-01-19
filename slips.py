@@ -2,6 +2,8 @@ import sys
 import xmlrpclib
 from config import xmlrpc_server
 
+print "Server: %s" % xmlrpc_server
+
 server = xmlrpclib.ServerProxy(xmlrpc_server)
 
 slips = False
