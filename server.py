@@ -75,10 +75,11 @@ class XRServer:
         
         #setup the kwargs
         kwargs = {'run':db_settings.get_active_run(),
-                  'time_stamp':datetime.datetime.now(),
+                  'time_stamp':str(datetime.datetime.now()),
                   'status':slips}
 
         #create the object
+        print "Creating slips object at: %s" % (str(kwargs['time_stamp']))
         slips_object = Slip(**kwargs)
         
         #add it to the db
