@@ -57,7 +57,7 @@ class XRServer:
     def addBlockPosition(self,position):
         
         kwargs = {'run':db_settings.get_active_run(),
-                  'time_stamp':datetime.datetime.now(),
+                  'time_stamp':str(datetime.datetime.now()),
                   'position':str(position),
                   'position_units':'ft'}
 
