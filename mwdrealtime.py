@@ -28,8 +28,6 @@ timestamp = timestamp.split('.')[0] #loses the microseconds!
 
 #6:00:00.000 PM 12/31/1903
 timestamp = datetime.datetime.strptime(timestamp,"%I:%M:%S %p %m/%d/%Y")
-import pdb
-pdb.set_trace()
 
 print type, value, timestamp
 
