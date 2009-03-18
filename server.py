@@ -12,7 +12,7 @@ setup_environ(settings)
 
 #setting up the slip model
 
-from tdsurface.depth.models import Slip, Settings, BlockPosition, MWDRealTime
+from tdsurface.depth.models import Slip, Settings, BlockPosition, ToolMWDRealTime
 
 db_settings = Settings()
 
@@ -20,7 +20,7 @@ db_settings = Settings()
 class XRServer:
     def addMWDRealTime(self,type,timestamp,value):
 
-        value = float(value)
+        # value = float(value)
 
         kwargs = {'run':db_settings.get_active_run(),
                   'time_stamp':timestamp}
@@ -47,9 +47,11 @@ class XRServer:
             kwargs['type'] = type
             kwargs['value'] = value
 
-        t = MWDRealTime(**kwargs)
+        t = ToolMWDRealTime(**kwargs)
 
         t.save()
+
+        print "!",type,timestamp,value
 
         return 'OK'
         
