@@ -1,5 +1,12 @@
 import SimpleXMLRPCServer
 import datetime
+import math
+import pdb
+
+#last buffer
+last_length = 50
+#fifo
+last = []
 
 #setup the django environment
 from django.core.management import setup_environ
@@ -20,38 +27,71 @@ db_settings = Settings()
 class XRServer:
     def addMWDRealTime(self,type,timestamp,value):
 
-        # value = float(value)
+        mwdrt = [type,timestamp,value]
 
-        kwargs = {'run':db_settings.get_active_run(),
+        if mwdrt in last:
+            print '.',
+            return 'Duplicate!'
+        
+        print ""
+        #append to the back
+        last.append(mwdrt)
+        print "buffer size:",len(last)
+
+        #pop the first
+        if len(last) > last_length:
+            last.pop(0)
+
+        try:
+            value = float(value)
+            
+            kwargs = {'run':db_settings.get_active_run(),
                   'time_stamp':timestamp}
 
-        if type == 'gx':
-            kwargs['type'] = 'G'
-            kwargs['value_x'] = value
-        elif type == 'gy':
-            kwargs['type'] = 'G'
-            kwargs['value_y'] = value
-        elif type == 'gz':
-            kwargs['type'] = 'G'
-            kwargs['value_z'] = value
-        elif type == 'hx':
-            kwargs['type'] = 'H'
-            kwargs['value_x'] = value
-        elif type == 'hy':
-            kwargs['type'] = 'H'
-            kwargs['value_y'] = value
-        elif type == 'hz':
-            kwargs['type'] = 'H'
-            kwargs['value_z'] = value
-        else:
-            kwargs['type'] = type
-            kwargs['value'] = value
+            if type == 'gx':
+                kwargs['type'] = 'G'
+                kwargs['value_x'] = value
+            elif type == 'gy':
+                kwargs['type'] = 'G'
+                kwargs['value_y'] = value
+            elif type == 'gz':
+                kwargs['type'] = 'G'
+                kwargs['value_z'] = value
+            elif type == 'hx':
+                kwargs['type'] = 'H'
+                kwargs['value_x'] = value
+            elif type == 'hy':
+                kwargs['type'] = 'H'
+                kwargs['value_y'] = value
+            elif type == 'hz':
+                kwargs['type'] = 'H'
+                kwargs['value_z'] = value
+            else:
+                kwargs['type'] = type
+                kwargs['value'] = value
+                
+            if type == 'toolface':
+                kwargs['value'] = (float(value)/10000.0)*360.0
+            elif type == 'inclination':
+                kwargs['value'] = (float(value)/10000.0)*180.0
+            elif type == 'azimuth':
+                kwargs['value'] = (float(value)/10000.0)*360.0
+            elif type == 'gammaray':
+                kwargs['value'] =  ( math.pow(10.0,( 2.0 * float(value) ) / 10.0 ) * 2.0 )
+            elif type == 'temperature':
+                kwargs['value'] =  ( float(value) * 500.0 ) / 10000.0
+            else:
+                print "WARNING: Did not convert value."
+            
+                
+            t = ToolMWDRealTime(**kwargs)
 
-        t = ToolMWDRealTime(**kwargs)
+            t.save()
+        except Exception, e:
+            print "ERROR:",e
+            print e
 
-        t.save()
-
-        print "!",type,timestamp,value
+        print "Final Value:",kwargs['type'],"@",kwargs['time_stamp'],"=",kwargs['value']
 
         return 'OK'
         
