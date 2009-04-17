@@ -45,7 +45,7 @@ class XRServer:
         try:
             value = float(value)
             
-            kwargs = {'run':db_settings.get_active_run(),
+            kwargs = {'run':db_settings.get_active_well(),
                   'time_stamp':timestamp}
 
             if type == 'gx':
@@ -98,7 +98,7 @@ class XRServer:
             
     def addBlockPosition(self,position):
         
-        kwargs = {'run':db_settings.get_active_run(),
+        kwargs = {'run':db_settings.get_active_well(),
                   'time_stamp':str(datetime.datetime.now()),
                   'position':str(position),
                   'position_units':'ft'}
@@ -116,7 +116,7 @@ class XRServer:
             slips = 1
         
         #setup the kwargs
-        kwargs = {'run':db_settings.get_active_run(),
+        kwargs = {'run':db_settings.get_active_well(),
                   'time_stamp':str(datetime.datetime.now()),
                   'status':slips}
 
