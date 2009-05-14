@@ -1,0 +1,25 @@
+Surface Adaptor
+
+INSTALL
+
+1.  Install the python scripts in a directory such as
+    /var/django-projects/surfaceadaptor.
+
+2.  In /var/django-projects/surfaceadaptor create a symbolic link to the
+    django project tdsurface.
+    sudo ln -s /var/django-projects/tdsurface
+
+3.  Create a symbolic link from /usr/sbin/surfaceadaptor to server.py.
+    sudo ln -s /var/django-projects/surfaceadaptor/server.py /usr/sbin/surfaceadaptor
+
+4.  Copy init.d/surfaceadaptor to /etc/init.d/ and make sure it has
+    execute privileges.
+
+5.  Create run level links to the init.d script.
+    sudo update-rc.d surfaceadaptor defaults
+
+Now the service should start on boot and you should be able to start,
+stop, and restart the surface adaptor with the standard command line
+tools.
+
+    sudo service surfaceadaptor start|stop|restart

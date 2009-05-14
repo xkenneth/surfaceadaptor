@@ -1,11 +1,14 @@
+#!/usr/bin/env python
+
 import SimpleXMLRPCServer
 import datetime
 import math
 import pdb
 
-log_file = open('log.txt','w+')
-log_file.write('Server Starting @ '+str(datetime.datetime.now()))
-log_file.write('\n')
+import logging
+
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', filename='/var/log/tdsurface/surfaceadaptor.log',level=logging.DEBUG,)
+
 
 #last buffer
 last_length = 150
@@ -32,9 +35,8 @@ db_settings = Settings()
 class XRServer:
     def logRealTime(self,timestamp,types,values):
         
-        log_file.write(str(timestamp))
-        log_file.write('\n')
-
+        logging.info("logRealTime")
+               
         values = values.split(',')
         types = types.split(',')
 
@@ -54,9 +56,8 @@ class XRServer:
             t = ChannelLog(**kwargs)
             
             t.save()
-        except Exception, e:
-            log_file.write(str(e))
-            log_file.write('\n')
+        except Exception, e:            
+            logging.error(str(e))
             return 'FAIL'
 
         return 'OK'
@@ -66,10 +67,7 @@ class XRServer:
     
     def addMWDRealTime(self,name,timestamp,value):
 
-        log_file.write(str("Processing:"+str(name)+str(timestamp)+str(value)))
-        log_file.write('\n')
-        log_file.write(str(type(timestamp)))
-        log_file.write('\n')
+        logging.info(str("Processing:"+str(name)+str(timestamp)+str(value)))        
 
         mwdrt = [name,timestamp.split('.')[0],value]
         
@@ -77,21 +75,16 @@ class XRServer:
         log_file.write('\n')
 
         if mwdrt in last:
-            log_file.write(str('Duplicate Found! Ignoring'))
-            log_file.write('\n')
+            logging.error(str('Duplicate Found! Ignoring'))            
             return 'Duplicate!'
 
         if name == '':
-            log_file.write(str("No Name!"))
-            log_file.write('\n')
+            logging.error(str("No Name!"))            
             return 'No Name!'
-        
-        log_file.write(str(""))
-        log_file.write('\n')
+                
         #append to the back
         last.append(mwdrt)
-        log_file.write(str("buffer size:"+str(len(last))))
-        log_file.write('\n')
+        logging.info(str("buffer size:"+str(len(last))))        
 
         #pop the first
         if len(last) > last_length:
@@ -99,7 +92,7 @@ class XRServer:
 
         try:
             value = float(value)
-            
+
             kwargs = {'well':db_settings.get_active_well(),
                   'time_stamp':timestamp}
 
@@ -144,33 +137,26 @@ class XRServer:
             elif name == 'azimuth':
                 kwargs['value'] = (float(value)/10000.0)*360.0
             elif name == 'gammaray_highres':
-                log_file.write(str("Processing High Res Gamma Ray"))
-                log_file.write('\n')
+                logging.info(str("Processing High Res Gamma Ray"))                
                 kwargs['type'] = 'gammaray'
                 kwargs['value'] =  ( math.pow(10.0,( 2.0 * float(value) ) / 10000.0 ) * 2.0 )
             elif name == 'gammaray_lowres':
-                log_file.write(str("Processing Low Res Gamma Ray"))
-                log_file.write('\n')
+                logging.info(str("Processing Low Res Gamma Ray"))                
                 kwargs['type'] = 'gammaray'
                 kwargs['value'] =  ( math.pow(10.0,( 2.0 * float(value) ) / 100.0 ) * 2.0 )
             elif name == 'temperature':
                 kwargs['value'] =  ( float(value) * 500.0 ) / 10000.0
             else:
-                log_file.write(str("WARNING: Did not convert value."))
-                log_file.write('\n')
-            
+                logging.warning(str("WARNING: Did not convert value."))                
+
                 
             t = ToolMWDRealTime(**kwargs)
 
             t.save()
         except Exception, e:
-            log_file.write(str("ERROR:"+str(e)))
-            log_file.write('\n')
-            log_file.write(str(e))
-            log_file.write('\n')
-
-        log_file.write(str("Final Value:"+kwargs))
-        log_file.write('\n')
+            logging.error(str(e))
+        	
+        logging.info(str("Final Value:"+kwargs))        
 
         return 'OK'
         
@@ -200,8 +186,8 @@ class XRServer:
                   'status':slips}
 
         #create the object
-        log_file.write(str("Creating slips object at: %s" % (str(kwargs['time_stamp']))))
-        log_file.write('\n')
+        logging.info(str("Creating slips object at: %s" % (str(kwargs['time_stamp']))))
+        
         slips_object = Slip(**kwargs)
         
         #add it to the db
@@ -212,14 +198,48 @@ class XRServer:
         
 
 from config import xmlrpc_server_address
-log_file.write(str("Attempting to bind server to: %s" % xmlrpc_server_address))
-log_file.write('\n')
+from daemon import Daemon
+import sys
 
-server_object = XRServer()
-server = SimpleXMLRPCServer.SimpleXMLRPCServer((xmlrpc_server_address, 8888))
-server.register_instance(server_object)
+class SurfaceAdaptorDaemon( Daemon ) :
+	def run(self) :
+		
+		logging.info('Server Surface Adaptor Starting...')
+				
+		logging.info("Attempting to bind server to: %s" % xmlrpc_server_address)		
+		
+		try :
+			server_object = XRServer()
+			server = SimpleXMLRPCServer.SimpleXMLRPCServer((xmlrpc_server_address, 8888))
+			server.register_instance(server_object)
+		except Exception, e:
+			logging.error(str(e))
 
-#Go into the main listener loop
-log_file.write(str("Listening on port 8888"))
-log_file.write('\n')
-server.serve_forever()
+		#Go into the main listener loop
+		logging.info("Listening on port 8888")		
+		server.serve_forever()
+		
+		
+if __name__ == "__main__" :
+	daemon = SurfaceAdaptorDaemon('/var/run/surfaceadaptor.pid')		
+	if len(sys.argv) == 2 :
+		if 'start' == sys.argv[1] :
+			daemon.start()
+		elif 'stop' == sys.argv[1] :
+			logging.info('Stopping Server')
+			daemon.stop()
+			
+		elif 'restart' == sys.argv[1] :
+			logging.info('Restarting Server')
+			daemon.restart()
+		else :
+			print "Unknown command"
+			print "usage: %s start|stop|restart" % sys.argv[0]
+			sys.exit(2)
+	
+	elif len(sys.argv) == 1 :		
+		daemon.start()
+	
+	else :
+		print "usage: %s start|stop|restart" % sys.argv[0]
+		sys.exit(2)
