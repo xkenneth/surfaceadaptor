@@ -19,7 +19,7 @@ last = []
 from django.core.management import setup_environ
 
 from tdsurface import settings
-
+ls
 setup_environ(settings)
 
 #import the needed models
