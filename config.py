@@ -6,7 +6,7 @@ xmlrpc_server = "%s%s:%s" % (xmlrpc_server_protocol,xmlrpc_server_address, xmlrp
 #WITS0 config
 wits_baud = 9600
 wits_timeout = 0.5
-wits_device = '/dev/sd'
+wits_device = '/dev/tty.PL2303-0000201A'
 
 
 try:
