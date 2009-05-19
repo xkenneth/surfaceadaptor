@@ -12,6 +12,7 @@ from PyWITS.wits0 import wits0
 
 from config import wits_baud, wits_timeout, wits_device
 
+print wits_device, wits_baud, wits_timeout
 ser = serial.Serial(wits_device,wits_baud,timeout=wits_timeout)
 rec = wits0(ser)
 
@@ -28,18 +29,21 @@ while(1):
     try:
         
         print "Requesting Data"
+        print globals.PASON_DATA_REQUEST
         rec.write(globals.PASON_DATA_REQUEST)
 
         time.sleep(1)
         
         data = rec.read()
+
+        print "!", data
         
         if len(data) > 0:
 
             #log = et.fromstring('<log/>')
             
             #file_name = os.path.join(os.getcwd(),'wits_log.xml')
-            #print "Logging to:",file_name
+            ##print "Logging to:",file_name
             #log_file = open(file_name,'a')
             
             print "Data Received"
@@ -73,15 +77,16 @@ while(1):
                 #        print records.all[item.identifier.record_identifier][item.identifier.item_identifier]['description'],':',item.value
                 #        continue
                 
-                print "Unkown data packet:", item
+                print "Unkown data packet:", item , " @ " , datetime.datetime.utcnow()
 
-                #kwargs = {'run':settings.get_active_run(),
-                #          'time_stamp':str(datetime.datetime.now()),
-                #          'recid':item.identifier.record_identifier,
-                #          'itemid':item.identifier.item_identifier,
-                #          'value':str(item.value)}
+                kwargs = {'run':Settings().get_active_run(),
+                          'time_stamp':datetime.datetime.utcnow(),
+                          'recid':item.identifier.record_identifier,
+                          'itemid':item.identifier.item_identifier,
+                          'value':str(item.value)}
 
-                #WITS0(**kwargs)
+                t = WITS0(**kwargs)
+                t.save()
                 
                 #add the data to the teledrill db
                 
