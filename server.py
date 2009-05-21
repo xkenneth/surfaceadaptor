@@ -40,25 +40,24 @@ class XRServer:
         values = values.split(',')
         types = types.split(',')
 
-        ignore = ['us_flow_ready','depth_1','depth_2']
-
-        #print types, values
+        ignore = ['us_flow_ready','depth_1','depth_2','hookload']
 
         kwargs = {'well':db_settings.get_active_well(),
                   'time_stamp':timestamp}
         
         for i,t in enumerate(types):
             if t is not '' and t not in ignore:
-                kwargs[t] = values[i]
+                kwargs[t] = float(values[i])
 
         try:
 
             t = ChannelLog(**kwargs)
             
             t.save()
+
         except Exception, e:            
             logging.error(str(e))
-            return 'FAIL'
+            return 'FAIL' + str(e)
 
         return 'OK'
         
