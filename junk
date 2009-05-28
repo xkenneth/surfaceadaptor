@@ -19,6 +19,7 @@ last = []
 from django.core.management import setup_environ
 
 from tdsurface import settings
+
 setup_environ(settings)
 
 #import the needed models
@@ -35,17 +36,14 @@ class XRServer:
     def logRealTime(self,timestamp,types,values):
         
         logging.info("logRealTime")
-        
-        timestamp = timestamp[1:-1]
                
-        #values = values.split(',')
-        values = eval(values)
-        values = [float(value) for value in values if value != ""]
-        types = eval(types)
-        #types = types.split(',')
+        values = values.split(',')
+        types = types.split(',')
 
         ignore = ['us_flow_ready','depth_1','depth_2']
-        
+
+        #print types, values
+
         kwargs = {'well':db_settings.get_active_well(),
                   'time_stamp':timestamp}
         
@@ -58,10 +56,9 @@ class XRServer:
             t = ChannelLog(**kwargs)
             
             t.save()
-
         except Exception, e:            
             logging.error(str(e))
-            return 'FAIL' + str(e)
+            return 'FAIL'
 
         return 'OK'
         
@@ -70,15 +67,20 @@ class XRServer:
     
     def addMWDRealTime(self,name,timestamp,value):
 
-        logging.info(str("Processing:")+str(name)+repr(timestamp)+str(value))
+        logging.info(str("Processing:"+str(name)+str(timestamp)+str(value)))        
 
-        mwdrt = [name,timestamp,value]
+        mwdrt = [name,timestamp.split('.')[0],value]
         
+        log_file.write(str(mwdrt))
+        log_file.write('\n')
+
         if mwdrt in last:
-            logging.info(str('Duplicate Found! Ignoring'))            
+            logging.error(str('Duplicate Found! Ignoring'))            
+            return 'Duplicate!'
 
         if name == '':
-            logging.info(str("No Name attached to data!"))            
+            logging.error(str("No Name!"))            
+            return 'No Name!'
                 
         #append to the back
         last.append(mwdrt)
@@ -149,14 +151,12 @@ class XRServer:
 
                 
             t = ToolMWDRealTime(**kwargs)
-            
 
             t.save()
-            
         except Exception, e:
             logging.error(str(e))
         	
-        logging.info(str("Final Value:")+str(mwdrt))
+        logging.info(str("Final Value:"+kwargs))        
 
         return 'OK'
         
