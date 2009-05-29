@@ -9,6 +9,8 @@ import logging
 
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', filename='/var/log/tdsurface/surfaceadaptor.log',level=logging.DEBUG,)
 
+from helper import convert
+
 
 #last buffer
 last_length = 150
@@ -92,61 +94,14 @@ class XRServer:
             
         kwargs = {'well':db_settings.get_active_well(),
                   'time_stamp':timestamp}
+        
+        kwargs['type'], axis, value = convert(name, value)
 
-        if name == 'gx':
-            kwargs['type'] = 'g'
-            kwargs['value_x'] = value
-        elif name == 'gy':
-            kwargs['type'] = 'g'
-            kwargs['value_y'] = value
-        elif name == 'gz':
-            kwargs['type'] = 'g'
-            kwargs['value_z'] = value
-        elif name == 'hx':
-            kwargs['type'] = 'H'
-            kwargs['value_x'] = value
-        elif name == 'hy':
-            kwargs['type'] = 'H'
-            kwargs['value_y'] = value
-        elif name == 'hz':
-            kwargs['type'] = 'H'
-            kwargs['value_z'] = value
-        elif name == 'G':
-            kwargs['type'] = 'g'
-            kwargs['value'] = str((float(value)/10000.0)*5.0)
-        elif name == 'H':
-            kwargs['type'] = 'H'
-            kwargs['value'] = str((float(value)/10000.0)*5.0)
-        elif name == 'g':
-            kwargs['type'] = 'g'
-            kwargs['value'] = str((float(value)/100.0)*5.0)
-        elif name == 'h':
-            kwargs['type'] = 'H'
-            kwargs['value'] = str((float(value)/100.0)*5.0)
+        if axis != '':
+            kwargs['value_'+axis] = str(value)
         else:
-            kwargs['type'] = name
-            kwargs['value'] = value
-            
-        if name == 'toolface':
-            kwargs['value'] = str((float(value)/10000.0)*360.0)
-        elif name == 'inclination':
-            kwargs['value'] = str((float(value)/10000.0)*180.0)
-        elif name == 'azimuth':
-            kwargs['value'] = str((float(value)/10000.0)*360.0)
-        elif name == 'gammaray_highres':
-            logging.info(str("Processing High Res Gamma Ray"))                
-            kwargs['type'] = 'gammaray'
-            kwargs['value'] =  str(( math.pow(10.0,( 2.0 * float(value) ) / 10000.0 ) * 2.0 ))
-        elif name == 'gammaray_lowres':
-            logging.info(str("Processing Low Res Gamma Ray"))                
-            kwargs['type'] = 'gammaray'
-            kwargs['value'] =  str(( math.pow(10.0,( 2.0 * float(value) ) / 100.0 ) * 2.0 ))
-        elif name == 'temperature':
-            kwargs['value'] =  str(( float(value) * 500.0 ) / 10000.0)
-        else:
-            logging.warning(str("WARNING: Did not convert value."))                
-
-            
+            kwargs['value'] = str(value)
+        
         t = ToolMWDRealTime(**kwargs)
             
 
