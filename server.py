@@ -82,8 +82,7 @@ class XRServer:
         if name == '':
             logging.info(str("No Name attached to data!"))            
                 
-        #append to the back
-        last.append(mwdrt)
+        
         logging.info(str("buffer size:"+str(len(last))))        
 
         #pop the first
@@ -101,13 +100,17 @@ class XRServer:
             kwargs['value_'+axis] = str(value)
         else:
             kwargs['value'] = str(value)
+
+        logging.info(str("Final Value:")+str(kwargs))
         
         t = ToolMWDRealTime(**kwargs)
-            
 
         t.save()
             
-        logging.info(str("Final Value:")+str(mwdrt))
+        
+
+        #append to the back
+        last.append(mwdrt)
 
         return 'OK'
         
